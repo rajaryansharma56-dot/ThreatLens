@@ -1,33 +1,62 @@
 
 import subprocess
 import json
+import sys
 
 
-def run_test(name, logs, expected_flagged, expected_invalid):
-    result = subprocess.run(
-        ["threatlens.exe", "--json"],
-        input=logs,
-        capture_output=True,
-        text=True
-    )
+def run_test(name, logs, expected_flagged,
+             expected_invalid, expected_severities):
+
+    try:
+        result = subprocess.run(
+            ["threatlens.exe", "--json"],
+            input=logs,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+    except FileNotFoundError:
+        print("ERROR: threatlens.exe not found.")
+        print("Compile main.cpp first:")
+        print("g++ main.cpp -o threatlens.exe")
+        sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print(name + ": FAIL - Engine timed out")
+        return False
 
     if result.returncode != 0:
-        print(name + ": FAIL")
-        print("Engine error:", result.stderr)
-        return
+        print(name + ": FAIL - Engine error")
+        print(result.stderr)
+        return False
 
     try:
         data = json.loads(result.stdout)
     except json.JSONDecodeError:
-        print(name + ": FAIL")
-        print("Invalid JSON output:", result.stdout)
-        return
+        print(name + ": FAIL - Invalid JSON output")
+        print(result.stdout)
+        return False
+
+    if "metrics" not in data or "detections" not in data:
+        print(name + ": FAIL - Missing JSON fields")
+        return False
 
     actual_flagged = data["metrics"]["flagged_accounts"]
     actual_invalid = data["metrics"]["invalid_records"]
 
-    if (actual_flagged == expected_flagged and
-            actual_invalid == expected_invalid):
+    actual_severities = sorted(
+        item["severity"] for item in data["detections"]
+    )
+
+    expected_severities = sorted(expected_severities)
+
+    passed = (
+        actual_flagged == expected_flagged
+        and actual_invalid == expected_invalid
+        and actual_severities == expected_severities
+        and len(data["detections"]) == expected_flagged
+    )
+
+    if passed:
         print(name + ": PASS")
     else:
         print(name + ": FAIL")
@@ -35,37 +64,98 @@ def run_test(name, logs, expected_flagged, expected_invalid):
         print("Actual flagged:", actual_flagged)
         print("Expected invalid:", expected_invalid)
         print("Actual invalid:", actual_invalid)
+        print("Expected severities:", expected_severities)
+        print("Actual severities:", actual_severities)
+
+    return passed
 
 
-# Test 1: Three consecutive failures should flag the account.
-run_test(
-    "Three consecutive failures",
-    "alice 0\nalice 0\nalice 0\n",
-    1,
-    0
-)
+def main():
+    tests = [
+        (
+            "Three consecutive failures",
+            "alice 0\nalice 0\nalice 0\n",
+            1, 0, ["HIGH"]
+        ),
+        (
+            "Successful login resets streak",
+            "bob 0\nbob 0\nbob 1\n",
+            0, 0, []
+        ),
+        (
+            "Invalid records are counted",
+            "alice 0\nbob 2\ncharlie 1 extra\n",
+            0, 2, []
+        ),
+        (
+            "Five failures trigger HIGH severity",
+            "david 0\ndavid 0\ndavid 0\ndavid 0\ndavid 0\n",
+            1, 0, ["HIGH"]
+        ),
+        (
+            "Two failures are not flagged",
+            "emma 0\nemma 0\n",
+            0, 0, []
+        ),
+        (
+            "Medium severity detection",
+            "frank 0\nfrank 0\nfrank 1\nfrank 0\n",
+            1, 0, ["MEDIUM"]
+        ),
+        (
+            "Mixed HIGH and MEDIUM detections",
+            "grace 0\ngrace 0\ngrace 0\n"
+            "henry 0\nhenry 0\nhenry 1\nhenry 0\n",
+            2, 0, ["HIGH", "MEDIUM"]
+        ),
+        (
+            "Empty input",
+            "",
+            0, 0, []
+        ),
+        (
+            "Blank lines are ignored",
+            "\n  \n\t\n",
+            0, 0, []
+        ),
+        (
+            "Invalid username is rejected",
+            "bad$user 0\n",
+            0, 1, []
+        ),
+        (
+            "Success-only account is not flagged",
+            "ivy 1\nivy 1\nivy 1\n",
+            0, 0, []
+        ),
+        (
+            "Repeated failures separated by successes",
+            "jack 0\njack 1\njack 0\njack 1\njack 0\n",
+            1, 0, ["MEDIUM"]
+        )
+    ]
 
-# Test 2: A success resets the streak.
-# Only two failures occur, so the account should not be flagged.
-run_test(
-    "Successful login resets streak",
-    "bob 0\nbob 0\nbob 1\n",
-    0,
-    0
-)
+    passed_count = 0
 
-# Test 3: Invalid records should be counted.
-run_test(
-    "Invalid records are counted",
-    "alice 0\nbob 2\ncharlie 1 extra\n",
-    0,
-    2
-)
+    print("\nTHREATLENS AUTOMATED TEST SUITE")
+    print("=" * 35)
 
-# Test 4: Five failures should flag the account.
-run_test(
-    "Five failures trigger detection",
-    "david 0\ndavid 0\ndavid 0\ndavid 0\ndavid 0\n",
-    1,
-    0
-)
+    for test in tests:
+        if run_test(*test):
+            passed_count += 1
+
+    total = len(tests)
+
+    print("=" * 35)
+    print(f"Results: {passed_count}/{total} tests passed")
+
+    if passed_count == total:
+        print("Overall result: ALL TESTS PASSED")
+        sys.exit(0)
+    else:
+        print("Overall result: SOME TESTS FAILED")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
