@@ -1,104 +1,84 @@
-# ThreatLens — Login Security Analyzer
+# ThreatLens
+### Rule-Based Authentication Log Analyzer
 
-**A lightweight, rule-based authentication log analyzer built with C++, Python, and a web dashboard.**
+ThreatLens is a lightweight security analysis project that examines authentication logs, identifies suspicious login-failure patterns, and classifies flagged accounts according to configurable detection rules.
 
-ThreatLens analyzes login outcomes, identifies repeated authentication failures, and highlights accounts that may require further investigation. It combines a C++ detection engine with a Python HTTP server and a browser-based dashboard.
-
-> **Project status:** Educational cybersecurity prototype. Detection is rule-based; results are indicators for investigation, not proof of an attack.
-
----
+Built with **C++, Python, HTML, CSS, and JavaScript**, ThreatLens combines a rule-based detection engine with a web dashboard for analyzing results and exporting reports.
 
 ## Overview
 
-Authentication logs can reveal suspicious patterns, such as repeated failed login attempts against the same account. ThreatLens processes login-result records and applies configurable-style threshold rules to flag potentially suspicious activity.
+Repeated authentication failures can indicate suspicious account activity. ThreatLens demonstrates how login records can be processed using simple detection rules to highlight accounts that may require further investigation.
 
-The project demonstrates how a native C++ program can work with a Python backend and a web interface to create a small, locally running security-analysis tool.
+The project is designed as an educational cybersecurity prototype, demonstrating log processing, rule-based detection, backend integration, and dashboard development.
 
 ## Features
 
-- **Authentication log analysis** — processes username and login-result records.
-- **Repeated-failure detection** — flags accounts with repeated failed attempts or consecutive failure streaks.
-- **Severity classification** — assigns `MEDIUM` or `HIGH` severity based on the implemented thresholds.
-- **Web dashboard** — presents analysis metrics and visual summaries.
-- **JSON and CSV exports** — supports exporting analysis results.
-- **Local execution** — the Python server runs on the local machine and communicates with the C++ engine.
-- **Simple architecture** — separates detection logic, backend communication, and frontend presentation.
+- **Authentication Log Analysis** — Processes login records to calculate failed attempts and consecutive failure streaks.
+- **Suspicious Account Detection** — Flags accounts that meet configured failure thresholds.
+- **Severity Classification** — Assigns HIGH or MEDIUM severity according to the configured rules.
+- **Web Dashboard** — Displays analyzed records, suspicious accounts, detection reasons, and severity levels.
+- **Report Export** — Supports downloading analysis results in JSON and CSV formats.
+- **Sample Dataset** — Includes synthetic authentication records for testing.
+- **C++ and Python Integration** — Uses a C++ detection engine connected to a Python backend and browser-based interface.
 
-## Tech Stack
+## Technology Stack
 
-| Component | Technology |
+| Technology | Purpose |
 |---|---|
-| Detection engine | C++ |
-| Backend server | Python |
-| Frontend | HTML, CSS, JavaScript |
-| Data exchange | JSON |
-| Export formats | JSON, CSV |
-| Development environment | Windows, Git, GitHub |
-
-## Project Architecture
-
-```text
-ThreatLens/
-├── main.cpp             # C++ log-analysis engine
-├── server.py            # Python HTTP server and API
-├── web/
-│   ├── index.html       # Dashboard structure
-│   ├── style.css        # Dashboard styling
-│   └── script.js        # Frontend interactions
-├── README.md
-├── .gitignore
-├── threatlens.exe       # Locally compiled executable
-└── login_logs.txt       # Local test input
-```
-
-`threatlens.exe` and `login_logs.txt` are local runtime files and may not be included in the Git repository. Build the executable and create a test log locally before running the complete application.
+| C++ | Authentication log analysis and detection rules |
+| Python | Backend server and engine integration |
+| HTML | Dashboard structure |
+| CSS | Dashboard styling |
+| JavaScript | Dashboard interactions and data presentation |
+| JSON | Structured analysis results |
+| CSV | Tabular report export |
 
 ## How Detection Works
 
-ThreatLens evaluates the login outcomes recorded for each username.
+ThreatLens evaluates login records using configurable rules based on failed login attempts and consecutive failure streaks.
 
-### Input format
+| Condition | Detection behavior |
+|---|---|
+| 3 or more failed attempts | Account is flagged |
+| 3 or more consecutive failures | Account is flagged |
+| 5 or more total failures | HIGH severity |
+| 3 or more consecutive failures | HIGH severity |
+| Other flagged cases | MEDIUM severity |
 
-Each record contains a username followed by a numeric result:
+The implementation's configured thresholds determine the result. A flagged account is not proof of a successful attack; it is an indicator for further investigation.
+
+## Project Structure
 
 ```text
-alice 0
-alice 0
-alice 1
-bob 1
-bob 0
+ThreatLens/
+├── main.cpp
+├── server.py
+├── README.md
+├── LICENSE
+├── .gitignore
+├── sample_logs.txt
+└── web/
+    ├── index.html
+    ├── style.css
+    └── script.js
 ```
 
-- `0` — failed login
-- `1` — successful login
-
-The input format does not include timestamps, so the analyzer cannot reconstruct real event times or a true time-based attack timeline.
-
-### Detection rules
-
-An account is flagged when either of the following conditions is met:
-
-- **Repeated failures:** at least 3 failed login attempts in total.
-- **Consecutive failures:** a streak of at least 3 consecutive failed attempts.
-
-The implemented severity rules are:
-
-| Severity | Condition |
-|---|---|
-| `HIGH` | At least 3 consecutive failures, or at least 5 total failed attempts |
-| `MEDIUM` | The account is flagged but does not meet the `HIGH` threshold |
-
-These are simple heuristic rules intended for demonstration. They do not establish malicious intent, and legitimate users can also generate repeated failures.
+- `main.cpp` — C++ detection engine.
+- `server.py` — Python backend server and engine integration.
+- `sample_logs.txt` — Synthetic test authentication records.
+- `web/index.html` — Dashboard interface.
+- `web/style.css` — Dashboard presentation.
+- `web/script.js` — Dashboard behavior and data handling.
+- `.gitignore` — Excludes selected generated and local runtime files.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Windows
-- A C++ compiler such as `g++` (MinGW-w64)
 - Python 3
+- A C++ compiler that supports the project's source code
 - A modern web browser
-- Git, if cloning the repository
+- A terminal or command prompt
 
 ### 1. Clone the repository
 
@@ -109,125 +89,84 @@ cd ThreatLens
 
 ### 2. Compile the C++ engine
 
-If you have `g++` installed, compile the engine from the project root:
+On Windows, using a compiler such as g++:
 
 ```bash
 g++ main.cpp -o threatlens.exe
 ```
 
-Make sure the compiler is available in your system's `PATH`.
+### 3. Start the backend
 
-### 3. Prepare a test log
-
-Create a local file named `login_logs.txt` in the project root and add synthetic records, for example:
-
-```text
-alice 0
-alice 0
-alice 0
-alice 1
-bob 1
-charlie 0
-charlie 0
-charlie 0
-charlie 0
-charlie 0
-```
-
-Use synthetic data for testing. Do not upload real authentication logs or sensitive account information to a public repository.
-
-### 4. Start the Python server
+Run:
 
 ```bash
 python server.py
 ```
 
-The server is configured to run locally at:
+### 4. Open the dashboard
 
-```text
+Visit:
+
 http://127.0.0.1:8000
-```
 
-Open this address in your browser to access the dashboard.
+Keep the backend running while using the dashboard.
 
-> Keep the server terminal open while using the dashboard. Stop the server with `Ctrl+C` when finished.
+*Note: These instructions reflect the project's current local setup. Compiler availability and any additional dependencies required by the source code may vary by environment.*
 
-### 5. Run the analysis
+## Sample Test Results
 
-Use the dashboard's log-analysis controls to process the prepared input. Review the resulting metrics and severity classifications, then try the available JSON and CSV export options.
+ThreatLens was tested with **11 synthetic authentication log records**.
 
-**Note:** The steps above describe the intended local workflow. Successful execution depends on the current implementation, compiler setup, and available input files.
+| Metric | Verified result |
+|---|---:|
+| Records analyzed | 11 |
+| Suspicious accounts detected | 2 |
+| HIGH-severity detections | 2 |
+| MEDIUM-severity detections | 0 |
 
-## API Endpoints
+### Detected Accounts
 
-The Python backend exposes the following local endpoints:
+| Username | Failed logins | Consecutive failures | Severity |
+|---|---:|---:|---|
+| alice | 3 | 3 | HIGH |
+| charlie | 5 | 5 | HIGH |
 
-| Endpoint | Purpose |
-|---|---|
-| `/api/status` | Reports backend and C++ engine availability |
-| `/api/analyze` | Runs or requests log analysis |
+The sample test also confirmed that the JSON and CSV report downloads work.
 
-The server uses the C++ executable for analysis and returns data to the web dashboard. Refer to `server.py` for the exact request methods, parameters, and response structure.
-
-## Testing Checklist
-
-Use synthetic test records to verify the main behaviors.
-
-- [ ] The server starts and reports whether the C++ engine is available.
-- [ ] The dashboard loads in a browser.
-- [ ] A successful login record is processed correctly.
-- [ ] Three failed attempts for one account trigger a flag.
-- [ ] Three consecutive failures trigger `HIGH` severity.
-- [ ] Five total failures trigger `HIGH` severity.
-- [ ] JSON export produces valid output.
-- [ ] CSV export produces the expected records.
-- [ ] Invalid or unexpected input is handled safely.
-
-These checks are a suggested validation plan; mark them complete only after testing the current version.
+These results demonstrate the configured rules against the sample dataset; they are not a benchmark of detection accuracy against real-world attacks.
 
 ## Security and Limitations
 
-ThreatLens is a learning project and is **not a production security monitoring system**.
+- ThreatLens uses rule-based detection rather than a trained machine-learning model.
+- Its findings depend on the input records and configured thresholds.
+- The current input format represents a username and login result, where `0` indicates failure and `1` indicates success.
+- The current prototype does not establish a real-time authentication monitoring pipeline.
+- Detection results should be treated as indicators, not definitive proof of malicious activity.
+- This project is intended for learning and experimentation, not production security monitoring.
 
-- **Rule-based detection:** no machine-learning model or advanced behavioral analysis is implemented.
-- **No timestamps:** input records lack event times, limiting temporal analysis.
-- **Potential false positives:** repeated failures can result from typing mistakes, expired credentials, or legitimate account activity.
-- **Input validation:** production use would require stronger validation and robust error handling.
-- **Local demonstration:** the server is intended for local use, not exposure to an untrusted network.
-- **Sensitive data:** use synthetic records and avoid committing credentials, personal information, or real login logs.
-- **No incident attribution:** flags identify patterns that merit review; they do not identify an attacker.
+Use synthetic or properly authorized data when testing the application. Do not commit passwords, secrets, or sensitive authentication logs to a public repository.
 
 ## Future Improvements
 
-Potential next steps include:
+Potential enhancements include:
 
-- Timestamp-aware log processing and time-window analysis
-- Configurable detection thresholds
-- More comprehensive input validation and automated tests
-- Improved reporting and investigation summaries
-- Additional detection rules and anomaly analysis
-- Authentication, access controls, and deployment hardening before any broader use
+- Timestamp-aware event analysis and detection timelines.
+- Additional detection rules and configurable thresholds.
+- Improved input validation and error handling.
+- Automated tests for detection rules and edge cases.
+- More detailed reports and dashboard visualizations.
+- Integration with authorized log sources for controlled monitoring experiments.
 
-## Learning Objectives
+## License
 
-This project explores:
-
-- File processing and rule-based detection in C++
-- Communication between a native executable and a Python backend
-- HTTP endpoints and JSON data exchange
-- Frontend dashboard development
-- Data export and basic cybersecurity log analysis
-- Version control and project documentation with Git and GitHub
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Author
 
 **Raj Aryan Sharma**
 
-Electronics & Instrumentation Engineering student interested in C++, software development, electronics, and cybersecurity.
+GitHub: [@rajaryansharma56-dot](https://github.com/rajaryansharma56-dot)
 
-- GitHub: [@rajaryansharma56-dot](https://github.com/rajaryansharma56-dot)
-- Project repository: [ThreatLens](https://github.com/rajaryansharma56-dot/ThreatLens)
+---
 
-## License
-
-No license has been specified yet. Until a license is added to the repository, do not assume that others have permission to redistribute or reuse this project's code.
+*ThreatLens — Turning authentication logs into actionable security indicators.*
