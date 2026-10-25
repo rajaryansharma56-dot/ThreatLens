@@ -170,3 +170,9 @@ GitHub: [@rajaryansharma56-dot](https://github.com/rajaryansharma56-dot)
 ---
 
 *ThreatLens — Turning authentication logs into actionable security indicators.*
+
+### Running Automated Tests
+
+ThreatLens includes 12 automated tests covering login failures, severity classification, invalid records, and other edge cases.
+
+Run the tests using: `g++ main.cpp -o threatlens.exe` and `python test_threatlens.py`.
