@@ -1,0 +1,11 @@
+alice 0
+alice 0
+alice 0
+alice 1
+bob 1
+bob 0
+charlie 0
+charlie 0
+charlie 0
+charlie 0
+charlie 0
