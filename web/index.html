@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080d16">
+    <meta name="description" content="ThreatLens - local authentication log analysis and suspicious login detection.">
+    <title>ThreatLens | Security Analytics</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/script.js" defer></script>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div style="color:#48e0b0;font-size:25px;">◈</div>
+            <div>
+                <div style="font-size:19px;">THREATLENS</div>
+                <small>SECURITY ANALYTICS</small>
+            </div>
+        </div>
+
+        <p class="section-label">WORKSPACE</p>
+
+        <nav>
+            <a href="#overview" class="active">◫ &nbsp; Security Overview</a>
+            <a href="#analysis">⇧ &nbsp; Authentication Logs</a>
+            <a href="#detections">⌁ &nbsp; Detection Reports</a>
+            <a href="#validation">✓ &nbsp; Log Validation</a>
+            <a href="#about">ⓘ &nbsp; About ThreatLens</a>
+        </nav>
+
+        <hr>
+
+        <div class="panel" style="padding:14px;">
+            <small>ENGINE STATUS</small>
+            <p id="sidebarStatusText" class="online">CHECKING ENGINE...</p>
+            <span id="sidebarStatusDot" class="online">●</span>
+            <p style="font-size:12px;">Local C++ analysis engine</p>
+        </div>
+
+        <div style="margin-top:24px;">
+            <small>THREATLENS v1.0</small>
+            <p style="font-size:11px;">Local security monitoring demo</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">SECURITY OPERATIONS / DASHBOARD</p>
+                <h1>Security Overview</h1>
+                <p>Analyze authentication logs and identify suspicious login patterns.</p>
+            </div>
+
+            <div id="engineStatus" class="engine-status">
+                <span id="engineStatusDot"></span>
+                <span id="engineStatusText">CHECKING ENGINE...</span>
+            </div>
+        </header>
+
+        <!-- OVERVIEW -->
+        <section id="overview">
+            <div class="panel">
+                <p class="eyebrow">THREAT MONITORING</p>
+                <h2>Authentication Security Analytics</h2>
+                <p>
+                    ThreatLens uses a C++ analysis engine to inspect login records,
+                    validate input, and flag accounts with repeated authentication failures.
+                </p>
+            </div>
+
+            <div class="metrics">
+                <article class="metric-card">
+                    <p>Successful Logins</p>
+                    <h2 id="successCount">—</h2>
+                    <small>Accepted records</small>
+                </article>
+
+                <article class="metric-card">
+                    <p>Failed Logins</p>
+                    <h2 id="failedCount">—</h2>
+                    <small>Rejected records</small>
+                </article>
+
+                <article class="metric-card">
+                    <p>Invalid Records</p>
+                    <h2 id="invalidCount">—</h2>
+                    <small>Rejected input rows</small>
+                </article>
+
+                <article class="metric-card">
+                    <p>Flagged Accounts</p>
+                    <h2 id="flaggedCount">—</h2>
+                    <small>Accounts matching rules</small>
+                </article>
+            </div>
+        </section>
+
+        <!-- LOG ANALYSIS -->
+        <section id="analysis" class="panel">
+            <p class="eyebrow">INPUT / ANALYSIS</p>
+            <h2>Authentication Log Analyzer</h2>
+            <p>
+                Select a plain-text log file containing a username and login result
+                on each line. The current demo accepts files up to 1 MB.
+            </p>
+
+            <div id="uploadZone" class="upload-zone">
+                <div style="font-size:32px;color:#48e0b0;">⇧</div>
+                <h3>Upload authentication logs</h3>
+                <p>Choose a file or drag and drop it here.</p>
+
+                <input
+                    type="file"
+                    id="logFile"
+                    accept=".txt,.log,text/plain"
+                >
+
+                <div id="selectedFile" hidden>
+                    <strong id="selectedFileName"></strong>
+                    <p id="selectedFileSize"></p>
+                </div>
+
+                <div style="margin-top:18px;">
+                    <button id="analyzeButton" type="button">
+                        <span id="analyzeButtonText">Analyze Logs</span>
+                        &nbsp; →
+                    </button>
+                </div>
+
+                <p id="fileStatus" role="status" aria-live="polite">
+                    Select a log file to begin analysis.
+                </p>
+            </div>
+        </section>
+
+        <!-- DETECTION REPORTS -->
+        <section id="detections" class="panel">
+            <div class="topbar">
+                <div>
+                    <p class="eyebrow">DETECTION ENGINE</p>
+                    <h2>Suspicious Accounts</h2>
+                    <p>Accounts flagged by the configured login-failure rules.</p>
+                </div>
+
+                <div>
+                    <span id="reportCount">0 DETECTIONS</span>
+                    <p id="recordsAnalyzed">0 RECORDS ANALYZED</p>
+                </div>
+            </div>
+
+            <!-- SEVERITY SUMMARY -->
+            <div class="severity-summary">
+                <div class="severity-summary-card high">
+                    <span>HIGH SEVERITY</span>
+                    <strong id="highSeverityCount">0</strong>
+                </div>
+
+                <div class="severity-summary-card medium">
+                    <span>MEDIUM SEVERITY</span>
+                    <strong id="mediumSeverityCount">0</strong>
+                </div>
+
+                <div class="severity-summary-card other">
+                    <span>LOW / OTHER</span>
+                    <strong id="otherSeverityCount">0</strong>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Failed Logins</th>
+                            <th>Failure Streak</th>
+                            <th>Detection Reason</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="suspiciousTable">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                Upload a log file to view detection results.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="button-row">
+                <button
+                    id="downloadReportButton"
+                    type="button"
+                    onclick="downloadAnalysisReport()"
+                >
+                    ↓ Download JSON Report
+                </button>
+
+                <button
+                    id="downloadCSVButton"
+                    type="button"
+                    onclick="downloadCSVReport()"
+                >
+                    ↓ Download CSV Report
+                </button>
+            </div>
+        </section>
+
+        <!-- DETECTION RULES -->
+        <section id="rules" class="panel">
+            <p class="eyebrow">RULE-BASED DETECTION</p>
+            <h2>Detection Rules</h2>
+            <p>Current rules used by the C++ analysis engine.</p>
+
+            <div class="rule-item">
+                <h3>Repeated Authentication Failures</h3>
+                <p>
+                    Flag an account when it reaches at least three failed login
+                    attempts in the analyzed log.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <h3>Consecutive Failure Detection</h3>
+                <p>
+                    Flag an account when its longest consecutive failed-login
+                    streak reaches three.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <h3>Severity Classification</h3>
+                <p>
+                    HIGH: a failure streak of at least three or at least five
+                    total failed logins. Other flagged accounts are classified
+                    MEDIUM by the current rules.
+                </p>
+            </div>
+        </section>
+
+        <!-- VALIDATION -->
+        <section id="validation" class="panel">
+            <p class="eyebrow">DATA QUALITY</p>
+            <h2>Log Validation</h2>
+
+            <div class="rule-item">
+                <h3>Username Validation</h3>
+                <p>
+                    Usernames are checked against the engine's allowed character
+                    rules and maximum length.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <h3>Record Validation</h3>
+                <p>
+                    Invalid or malformed rows are counted separately from
+                    successful and failed login records.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <h3>Local File Processing</h3>
+                <p>
+                    The browser sends log content to the local Python backend,
+                    which invokes the C++ analyzer.
+                </p>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about" class="panel">
+            <p class="eyebrow">PROJECT INFORMATION</p>
+            <h2>About ThreatLens</h2>
+            <p>
+                ThreatLens is a local authentication-log analysis demonstration
+                built with C++, Python, HTML, CSS, and JavaScript.
+            </p>
+
+            <div class="rule-item">
+                <h3>Technology Stack</h3>
+                <p>C++ · Python · HTML · CSS · JavaScript</p>
+            </div>
+
+            <div class="rule-item">
+                <h3>Purpose</h3>
+                <p>
+                    Demonstrate log parsing, input validation, rule-based
+                    detection, and security-report generation.
+                </p>
+            </div>
+
+            <p style="font-size:12px;">
+                Detection results are indicators based on configured rules.
+                They do not independently prove malicious activity.
+            </p>
+        </section>
+
+        <footer style="padding:20px 0;text-align:center;">
+            <small>THREATLENS v1.0 · LOCAL SECURITY ANALYTICS DEMO</small>
+        </footer>
+
+    </main>
+</div>
+</body>
+</html>
